@@ -199,7 +199,7 @@ public:
             			break;
 				}
 				//cout<<comp_c<<endl;
-                if((!redwin&&comp_c==colors::RED)||(!redwin&&comp_c==colors::BLUE))
+                if((redwin&&comp_c==colors::RED)||(!redwin&&comp_c==colors::BLUE))
                 	count_win++;
 			}
 			cout<<"Move checked: "<<a_move.first<<" "<<a_move.second<<"\tNo of times win "<<count_win<<endl;
