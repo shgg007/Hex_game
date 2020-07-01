@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
 using namespace std;
-/* 	This is a hex game implementation where computer makes random moves and you can decide your moves.
+/* 	This is a hex game implementation where computer makes moves based on Monte Carlo Simulations and you can decide your moves.
 	Blue's aim is to make a path between left and right.
 	Red's aim is to make a path between top and bottom.*/
 enum class colors:short{BLUE, RED, BLANK};//defining categories of hexagons
@@ -167,7 +167,7 @@ public:
         				else if(hexa.x==size-1)
             				down.push_back(hexa.y);
 						set_red.make_set(hash(hexa.x,hexa.y));//firstly make a disjoint set for the move node
-        				for(auto k:make_adj(hexa.x,hexa.y)){// if any neighbour is blue, take union of the above set with that neighbour's set
+        				for(auto k:make_adj(hexa.x,hexa.y)){// if any neighbour is red, take union of the above set with that neighbour's set
             				if(board_copy[hash(k.first,k.second)].color==colors::RED)
                 				set_red.union_sets(hash(hexa.x,hexa.y),hash(k.first,k.second));
         				}
