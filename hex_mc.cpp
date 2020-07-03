@@ -167,18 +167,26 @@ public:
 				disjoint set_red(size*size);//for checking if red id winner after all the blanks cells have been filled, using disjoint sets
 				vector<int> up,down;//for storing the upper and lower boundary nodes which are red colored
         		colors flag=player_c;//this flag keeps on switching after assigning some blank hexagon some color
+                for(auto ind : indices) {
+                    hexagon cur = board_copy[ind];
+                    if(cur.color == colors::RED)
+                        set_red.make_set(hash(cur.x, cur.y));
+                }
 				for(auto ind : indices){//iterating over the random ordered indices, to update the board copy, and update the disjoint set
 					hexagon& hexa = board_copy[ind];
 					if(hexa.color==colors::BLANK){//if blank then assign color and switch flag
 						hexa.color = flag;
-						flag = (flag==colors::RED)?colors::BLUE:colors::RED;
+						if(flag == colors::RED)
+                            set_red.make_set(hash(hexa.x, hexa.y));
+                        flag = (flag==colors::RED)?colors::BLUE:colors::RED;
+
 					}
 					if(hexa.color==colors::RED){//if color is red then update the disjoint set to check if red is winner
 						if(hexa.x==0)//update upper boundary nodes
             				up.push_back(hexa.y);
         				else if(hexa.x==size-1)//update lower boundary nodes
             				down.push_back(hexa.y);
-						set_red.make_set(hash(hexa.x,hexa.y));//firstly make a disjoint set for the move node
+						// set_red.make_set(hash(hexa.x,hexa.y));//firstly make a disjoint set for the move node
         				for(auto k:hexa.adj){// if any neighbour is red, take union of the above set with that neighbour's set
             				if(board_copy[hash(k.first,k.second)].color==colors::RED)
                 				set_red.union_sets(hash(hexa.x,hexa.y),hash(k.first,k.second));
@@ -211,7 +219,7 @@ public:
             			break;
 				}
 				//cout<<comp_c<<endl;
-                if((redwin&&comp_c==colors::RED)||(!redwin&&comp_c==colors::BLUE))//update count_win
+                if((redwin&&comp_c==colors::RED)||( (!redwin) && comp_c==colors::BLUE ) )//update count_win
                 	count_win++;
 			}
 			cout<<"Move checked: "<<a_move.first<<" "<<a_move.second<<"\tNo of times win "<<count_win<<endl;
