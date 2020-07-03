@@ -167,7 +167,7 @@ public:
 				disjoint set_red(size*size);//for checking if red id winner after all the blanks cells have been filled, using disjoint sets
 				vector<int> up,down;//for storing the upper and lower boundary nodes which are red colored
         		colors flag=player_c;//this flag keeps on switching after assigning some blank hexagon some color
-                for(auto ind : indices) {
+                for(auto ind : indices) {//updates the already red colored nodes in disjoint set
                     hexagon cur = board_copy[ind];
                     if(cur.color == colors::RED)
                         set_red.make_set(hash(cur.x, cur.y));
@@ -176,7 +176,7 @@ public:
 					hexagon& hexa = board_copy[ind];
 					if(hexa.color==colors::BLANK){//if blank then assign color and switch flag
 						hexa.color = flag;
-						if(flag == colors::RED)
+						if(flag == colors::RED)//if the node is colored red, then update disjoint set
                             set_red.make_set(hash(hexa.x, hexa.y));
                         flag = (flag==colors::RED)?colors::BLUE:colors::RED;
 
@@ -193,20 +193,7 @@ public:
         				}
 					}
 				}
-				//for(auto j : board_copy)
-				//	cout<<j.color;
-				//cout<<endl;
-				//for(auto j : board_copy)
-				//	cout<<set_red.find_set(hash(j.x,j.y))<<" ";
-				//cout<<endl;
 				bool redwin=false;//store if red is winner
-				//cout<<"up ";
-				//for(auto j:up)
-				//	cout<<j<<" ";
-				//cout<<endl<<"down ";
-				//for(auto j:down)
-				//	cout<<j<<" ";
-				//cout<<endl;
 				for(auto j:up){//iterate over upper and lower boundary nodes, if check if any pair of them are in same component
             		for(auto k:down){
                 		if(set_red.find_set(hash(0,j))==set_red.find_set(hash(size-1,k))){
@@ -218,17 +205,16 @@ public:
             		if(redwin==true)
             			break;
 				}
-				//cout<<comp_c<<endl;
-                if((redwin&&comp_c==colors::RED)||( (!redwin) && comp_c==colors::BLUE ) )//update count_win
+                if((redwin&&comp_c==colors::RED)||((!redwin) && comp_c==colors::BLUE ) )//update count_win
                 	count_win++;
 			}
-			cout<<"Move checked: "<<a_move.first<<" "<<a_move.second<<"\tNo of times win "<<count_win<<endl;
+			//cout<<"Move checked: "<<a_move.first<<" "<<a_move.second<<"\tNo of times win "<<count_win<<endl;
 			if((float(count_win)/float(num_trials))>=best_move_value){//update best move and best move value
 				best_move = make_pair(a_move.first,a_move.second);
 				best_move_value = float(count_win)/num_trials;
 			}
 		}
-		cout<<best_move_value<<" "<<best_move.first<<" "<<best_move.second<<endl;
+		cout<<"Best Move Value: "<<best_move_value<<" \tBest move: "<<best_move.first<<" "<<best_move.second<<endl;
 		make_move(best_move.first,best_move.second,comp_c);//make the best move for computer
         available_moves.erase(make_pair(best_move.first,best_move.second));//remove the move from available moves
         return make_pair(best_move.first,best_move.second);
