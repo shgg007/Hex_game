@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
 using namespace std;
-/* 	This is a hex game implementation where computer makes moves based on Monte Carlo Simulations and you can decide your moves.
+/* 	This is a hex game implementation where computer makes moves based on Monte Carlo simulations and you can decide your moves.
 	Blue's aim is to make a path between left and right.
 	Red's aim is to make a path between top and bottom.*/
 enum class colors:short{BLUE, RED, BLANK};//defining categories of hexagons
@@ -23,7 +23,7 @@ private:
     vector<int> parent, rank;
 public:
     disjoint(int n){//takes size as input
-        parent.resize(n);//using n*n because there are that many hexagons
+        parent.resize(n);
         rank.resize(n);
     }
     void make_set(int v) {
@@ -35,7 +35,7 @@ public:
             return v;
         return parent[v] = find_set(parent[v]);
     }
-    void union_sets(int a, int b) {
+    void union_sets(int a, int b) {//takes union of the sets of a and b
         a = find_set(a);
         b = find_set(b);
         if (a != b) {
@@ -88,7 +88,7 @@ private:
 public:
     colors player_c = colors::RED;// color of the player
     colors comp_c = colors::RED;// color of the computer
-    set<pair<int,int>> available_moves;
+    set<pair<int,int>> available_moves;//storing the currently available moves
     hex_board(int n){//constructor to initialize all the nodes with blank color and also calculate their edges
     	board.resize(n,vector<hexagon>(n));
     	size=n;
@@ -98,11 +98,11 @@ public:
 				board[i][j].y = j;
 				board[i][j].color = colors::BLANK;
 				board[i][j].adj = make_adj(i,j);
-				available_moves.insert(make_pair(i,j));
+				available_moves.insert(make_pair(i,j));//initially all moves are available
 			}
 		}
     }
-    void print(){// to print present state of the hex board
+    void print(){// to print current state of the hex board
     	cout<<"Blue - left right and Red - up down"<<endl;
         for(int i=0;i<size;i++){
             for(int j=0;j<2*i;j++)
@@ -135,39 +135,51 @@ public:
         cout<<c<<" moves "<<x<<" "<<y<<endl;
         return true;
     }
-    pair<int,int> comp_move(){// for computer's move; currently random move strategy
+
+    /*	Monte Carlo Strategy
+    	Iterate over all the available moves
+    		make that move
+    		perform simulations with completely random moves many times
+    		maintain a best move which captures the move with highest win ratio in these random move simulations
+		Use this best move
+    */
+    pair<int,int> comp_move(){// for computer's move
 		srand(time(0));
-		int num_trials = 10;
-		pair<int,int> best_move(0,0);
-		float best_move_value = 0.0;
-		for(auto a_move : available_moves){
-			int count_win=0;
+		int num_trials = 1000;// number of simulations for each move
+		pair<int,int> best_move(0,0);//maintains best move
+		float best_move_value = 0.0;//maintains best move's win ratio
+		for(auto a_move : available_moves){//iterate over all available moves
+			int count_win=0;//maintains number of wins out of number of trials
 			for(int i=0;i<num_trials;i++){
-				vector<hexagon> board_copy;
+				//For random simulations, a board copy is made, the board is shuffled
+				//Then, all the blank hexagons are filled with red and blue alternatively without checking the winner
+				//Then at last, the winner is checked, since once someone has won the game, the winner cant change (No draws possible in hex)
+
+				vector<hexagon> board_copy;//makes a 1-D copy of board
 				for(int j=0;j<size;j++){
 					board_copy.insert(board_copy.end(),board[j].begin(),board[j].end());
 				}
-				board_copy[hash(a_move.first,a_move.second)].color = comp_c;
-				int indices[size*size];
+				board_copy[hash(a_move.first,a_move.second)].color = comp_c;//make the move for which the simulations will be held
+				int indices[size*size];//firstly stores indices and then is shuffled to get order of iteration
 				for(int j=0;j<size*size;j++)
 					indices[j]=j;
 				random_shuffle(indices,indices+size*size);
-				disjoint set_red(size*size);
-				vector<int> up,down;
-        		colors flag=player_c;
-				for(auto ind : indices){
+				disjoint set_red(size*size);//for checking if red id winner after all the blanks cells have been filled, using disjoint sets
+				vector<int> up,down;//for storing the upper and lower boundary nodes which are red colored
+        		colors flag=player_c;//this flag keeps on switching after assigning some blank hexagon some color
+				for(auto ind : indices){//iterating over the random ordered indices, to update the board copy, and update the disjoint set
 					hexagon& hexa = board_copy[ind];
-					if(hexa.color==colors::BLANK){
+					if(hexa.color==colors::BLANK){//if blank then assign color and switch flag
 						hexa.color = flag;
 						flag = (flag==colors::RED)?colors::BLUE:colors::RED;
 					}
-					if(hexa.color==colors::RED){
-						if(hexa.x==0)
+					if(hexa.color==colors::RED){//if color is red then update the disjoint set to check if red is winner
+						if(hexa.x==0)//update upper boundary nodes
             				up.push_back(hexa.y);
-        				else if(hexa.x==size-1)
+        				else if(hexa.x==size-1)//update lower boundary nodes
             				down.push_back(hexa.y);
 						set_red.make_set(hash(hexa.x,hexa.y));//firstly make a disjoint set for the move node
-        				for(auto k:make_adj(hexa.x,hexa.y)){// if any neighbour is red, take union of the above set with that neighbour's set
+        				for(auto k:hexa.adj){// if any neighbour is red, take union of the above set with that neighbour's set
             				if(board_copy[hash(k.first,k.second)].color==colors::RED)
                 				set_red.union_sets(hash(hexa.x,hexa.y),hash(k.first,k.second));
         				}
@@ -179,7 +191,7 @@ public:
 				//for(auto j : board_copy)
 				//	cout<<set_red.find_set(hash(j.x,j.y))<<" ";
 				//cout<<endl;
-				bool redwin=false;
+				bool redwin=false;//store if red is winner
 				//cout<<"up ";
 				//for(auto j:up)
 				//	cout<<j<<" ";
@@ -187,7 +199,7 @@ public:
 				//for(auto j:down)
 				//	cout<<j<<" ";
 				//cout<<endl;
-				for(auto j:up){
+				for(auto j:up){//iterate over upper and lower boundary nodes, if check if any pair of them are in same component
             		for(auto k:down){
                 		if(set_red.find_set(hash(0,j))==set_red.find_set(hash(size-1,k))){
 							redwin = true;
@@ -199,18 +211,18 @@ public:
             			break;
 				}
 				//cout<<comp_c<<endl;
-                if((redwin&&comp_c==colors::RED)||(!redwin&&comp_c==colors::BLUE))
+                if((redwin&&comp_c==colors::RED)||(!redwin&&comp_c==colors::BLUE))//update count_win
                 	count_win++;
 			}
 			cout<<"Move checked: "<<a_move.first<<" "<<a_move.second<<"\tNo of times win "<<count_win<<endl;
-			if((float(count_win)/float(num_trials))>=best_move_value){
+			if((float(count_win)/float(num_trials))>=best_move_value){//update best move and best move value
 				best_move = make_pair(a_move.first,a_move.second);
 				best_move_value = float(count_win)/num_trials;
 			}
 		}
 		cout<<best_move_value<<" "<<best_move.first<<" "<<best_move.second<<endl;
-		make_move(best_move.first,best_move.second,comp_c);
-        available_moves.erase(make_pair(best_move.first,best_move.second));
+		make_move(best_move.first,best_move.second,comp_c);//make the best move for computer
+        available_moves.erase(make_pair(best_move.first,best_move.second));//remove the move from available moves
         return make_pair(best_move.first,best_move.second);
     }
     int hash(int x, int y){//simple hashing used in disjoint sets
